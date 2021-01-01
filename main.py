@@ -9,4 +9,9 @@ test_net + Simp_Layer(3)
 net = test_net.build()
 
 inp = [1.0,1.0,0.0]
+out = [0.0,0.0,1.0]
+
 net.Feed_Forward(inp)
+net.BackProp(out)
+
+print(net.errors)
