@@ -2,10 +2,9 @@ import numpy as np
 from Neural_Network import Neural_Network
 
 class Network_Constructor:
-    def __init__(self,act_f='tanh',optim='grad',loss_f='mse'):
+    def __init__(self,act_f='tanh',optim='grad'):
         self.__act_f  = act_f
         self.__optim  = optim
-        self.__loss_f = loss_f
 
         self._param_container = []        
 
@@ -21,27 +20,35 @@ class Network_Constructor:
         self._param_container.append(lay)
 
     def build(self):
-        _weights     = []
-        _neurons     = []
-        _act_neurons = []
-        _errors      = []
-        _act_f       = []
-
-        if   self.__loss_f=='mse': loss = lambda x,y: np.sum((y-x)**2)/len(x)
-        elif self.__loss_f=='mae': loss = lambda x,y: np.sum(np.abs(y-x))/len(x)
-
+        _delta_weights = []
+        _weights       = []
+        _neurons       = []
+        _act_neurons   = []
+        _errors        = []
+        _act_f         = []
+    
+        #'mse': loss = lambda targ,out: np.sum((out-targ)**2)/len(targ)
+        #'mae': loss = lambda targ,out: np.sum(np.abs(out-targ))/len(targ)
+        
         lay = len(self._param_container)
 
         for s in range(lay):
             lin=self._param_container[s][0]
 
-            if   self._param_container[s][1] == 'none': _act_f.append(lambda x: x)
-            elif self._param_container[s][1] == 'tanh': _act_f.append(lambda x: (np.exp(2*x)-1)/(np.exp(2*x)+1))
-            elif self._param_container[s][1] == 'sigm': _act_f.append(lambda x: 1/(1+np.exp(-x)))
+            if   self._param_container[s][1] == 'none': _act_f.append([lambda x: x,                               lambda x: 0])
+            elif self._param_container[s][1] == 'tanh': _act_f.append([lambda x: (np.exp(2*x)-1)/(np.exp(2*x)+1), lambda x: 1-x**2])
+            elif self._param_container[s][1] == 'sigm': _act_f.append([lambda x: 1/(1+np.exp(-x)),                lambda x: x*(1-x)])
 
-            _neurons.append(np.zeros(lin))
-            _act_neurons.append(np.zeros(lin))
-            _errors.append(np.zeros(lin))
+            tmp = np.zeros(lin)
+
+            _neurons.append([])
+            _neurons[s]=tmp
+
+            _act_neurons.append([])
+            _act_neurons[s]=tmp
+
+            _errors.append([])
+            _errors[s]=tmp
 
         for s in range(lay-1):
             lin=self._param_container[s][0]
@@ -50,7 +57,10 @@ class Network_Constructor:
             _weights.append([])
             _weights[s]=np.random.random_sample((lin,next_lin))
 
-        return Neural_Network(_weights,_neurons,_act_neurons,_errors,_act_f,loss)
+            _delta_weights.append([])
+            _delta_weights[s]=np.zeros((lin,next_lin))
+
+        return Neural_Network(_weights,_delta_weights,_neurons,_act_neurons,_errors,_act_f)
 
 class Simp_Layer:
     def __init__(self,lines,act_f='default',optim='default'):  
